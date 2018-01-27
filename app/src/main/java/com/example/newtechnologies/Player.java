@@ -3,112 +3,88 @@ package com.example.newtechnologies;
 import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 /**
  * Created by асер on 26.01.2018.
  */
 
-public class Player implements Constants {
+public class Player extends PlayObject implements Constants {
 
-    private int x, y;
-    private int xHeading, yHeading;
     private int heading;
-    private int curentWidth, curentHeight, idleFrogWidth, idleFrogHeight, flyFrogWidth, flyFrogHeight, bulkWidth, bulkHeight;
-    private int curentState;
-    Rect rect;
+    private int idleFrogWidth, idleFrogHeight, flyFrogWidth, flyFrogHeight, bulkWidth, bulkHeight;
 
-    private Drawable curentImg;
     private Drawable idleFrogImg;
     private Drawable flyFrogImg;
     private Drawable bulkImg;
 
     Player(Context context, int x, int y) {
+        super(context, x, y);
+        Log.i(TAG, "Player Begin Constr ");
         initImg(context);
         defineSizeImg();
-        curentState = STATE_IDLE;
-        rect = new Rect();
-        this.x=x;
-        this.y=y;
+        setState(STATE_IDLE);
+        Log.i(TAG, "Player Finish Constr ");
     }
     private void initImg(Context context) {
+        Log.i(TAG, "Player Begin initImg ");
         idleFrogImg = context.getResources().getDrawable(R.drawable.idle_frog);
         flyFrogImg = context.getResources().getDrawable(R.drawable.fly_frog);
         bulkImg = context.getResources().getDrawable(R.drawable.bulk);
+        Log.i(TAG, "Player Finish initImg ");
     }
-    private void defineSizeImg() {
+    protected void defineSizeImg() {
+        Log.i(TAG, "Player Begin defineSizeImg ");
         idleFrogWidth = idleFrogImg.getIntrinsicWidth();
         idleFrogHeight = idleFrogImg.getIntrinsicHeight();
         flyFrogWidth = flyFrogImg.getIntrinsicWidth();
         flyFrogHeight = flyFrogImg.getIntrinsicHeight();
         bulkWidth = bulkImg.getIntrinsicWidth();
         bulkHeight = bulkImg.getIntrinsicHeight();
+        Log.i(TAG, "Player Finish defineSizeImg ");
+
     }
-    public void resizeImg(int coefficientScale) {
-        idleFrogWidth = idleFrogWidth/coefficientScale;
-        idleFrogHeight = idleFrogHeight/coefficientScale;
-        flyFrogWidth = flyFrogWidth/coefficientScale;
-        flyFrogHeight = flyFrogHeight/coefficientScale;
-        bulkWidth = bulkWidth/coefficientScale;
-        bulkHeight = bulkHeight/coefficientScale;
+    public void resizeImg(float coefficientScale){
+        Log.i(TAG, "Player Begin resizeImg ");
+        idleFrogWidth = (int) (idleFrogWidth/coefficientScale);
+        Log.i(TAG, "resizeImg: idleFrogWidth = "+idleFrogWidth);
+        idleFrogHeight = (int) (idleFrogHeight/coefficientScale);
+        flyFrogWidth = (int) (flyFrogWidth/coefficientScale);
+        flyFrogHeight = (int) (flyFrogHeight/coefficientScale);
+        bulkWidth = (int) (bulkWidth/coefficientScale);
+        bulkHeight = (int) (bulkHeight/coefficientScale);
+        Log.i(TAG, "Player Finish resizeImg ");
     }
     public void setState(int curentState) {
+        Log.i(TAG, "Player Begin setState ");
         if(curentState == STATE_IDLE){
             curentImg = idleFrogImg;
-            rect.set(x, y, x + idleFrogWidth, y + idleFrogHeight);//////////////////
+            rect.set(x, y, x + idleFrogWidth, y + idleFrogHeight);
+//            Log.i(TAG, "setState: idleFrogWidth = "+idleFrogWidth);
+//            xHeading = rect.centerX();//x + idleFrogWidth/2;
+//            yHeading = rect.centerY();//y + idleFrogHeight/2;
 //            curentWidth = idleFrogWidth;
 //            curentHeight = idleFrogHeight;
-            xHeading = rect.centerX();//x + idleFrogWidth/2;
-            yHeading = rect.centerY();//y + idleFrogHeight/2;
-        }else if (curentState == STATE_FLY){
+        }else if (curentState == STATE_MOVE){
             curentImg = flyFrogImg;
-            curentWidth = flyFrogWidth;
-            curentHeight = flyFrogHeight;
-            xHeading = x + flyFrogWidth/2;
-            yHeading = y + flyFrogHeight/2;
+
         }else if (curentState == STATE_BULK){
             curentImg = bulkImg;
-            curentWidth = bulkWidth;
-            curentHeight = bulkHeight;
+
         }else if (curentState == STATE_LOSE){
             //game over
 
         }else if (curentState == STATE_WIN){
             //win
         }
-
+        Log.i(TAG, "Player Finish setState ");
     }
     public void updatePhysics() {
-
-    }
-
-    public Drawable getCurentImg() {
-        return curentImg;
-    }
-    public int getX() {
-        return x;
-    }
-    public int getY() {
-        return y;
+        Log.i(TAG, "Player updatePhysics");
     }
     public int getHeading() {
+        Log.i(TAG, "Player getHeading");
         return heading;
     }
-
-    public int getxHeading() {
-        return xHeading;
-    }
-
-    public int getyHeading() {
-        return yHeading;
-    }
-
-    public int getCurentWidth() {
-        return x+curentWidth+50;
-    }
-
-    public int getCurentHeight() {
-        return y+curentHeight+50;
-    }
-
 
 }

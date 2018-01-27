@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -11,7 +12,7 @@ import android.view.SurfaceHolder;
 import android.widget.TextView;
 import android.os.Handler;
 
-public class MyThread extends Thread {
+public class MyThread extends Thread implements Constants {
 
     String TAG="Target";
     boolean running;
@@ -20,7 +21,7 @@ public class MyThread extends Thread {
     private Bitmap backgroundImg;
     private Drawable idle_frog_img, fly_frog_img, bulk_img, kuvshinka_img;
     private int mCanvasWidth, mCanvasHeight, bgWidth, bgHeight;
-    private int coefficientScale;
+    private float coefficientScale;
     private int lengthJump;
     Player player;
     Kuvshinka kuvshinka;
@@ -30,21 +31,43 @@ public class MyThread extends Thread {
     TextView tv;
 
     public MyThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
+        Log.i(TAG, "Begin Constructor MyThread");
         this.surfaceHolder = surfaceHolder;
         this.handler = handler;
         this.context = context;
         initImg();
         defineSizeImg();
-        makeStage();
-        Log.i(TAG, "MyThread constr!");
+        makeStage1();
+        Log.i(TAG, "Finish Constructor MyThread");
     }
 
-    private void makeStage() {
-        int x=100;
-        int y=100;
-        player = new Player(context);
-        kuvshinka = new Kuvshinka(context, x, y);
-        hippo = new Hippo(context, x, y);
+    private void makeStage1() {
+        Log.i(TAG, "Begin makeStage1");
+        int xPlayer=100;
+        int yPlayer=100;
+        int xKuvshinka = 150;
+        int yKuvshinka = 100;
+        int xHippo = 300;
+        int yHippo = 200;
+        player = new Player(context, xPlayer, yPlayer);
+        kuvshinka = new Kuvshinka(context, xKuvshinka, yKuvshinka);
+        hippo = new Hippo(context, xHippo, yHippo);
+        Log.i(TAG, "Finish makeStage1");
+    }
+    public void setState(int curentState) {
+        Log.i(TAG, "Begin setState");
+        if (curentState == STATE_RUNING) {
+            player.setState(STATE_IDLE);
+            hippo.setState(STATE_MOVE);
+        } else if (curentState == STATE_PAUSE) {
+
+        } else if (curentState == STATE_LOSE) {
+            //game over
+
+        } else if (curentState == STATE_WIN) {
+            //win
+        }
+        Log.i(TAG, "Finish setState");
     }
 
     private void initImg() {
@@ -55,31 +78,32 @@ public class MyThread extends Thread {
     private void defineSizeImg() {
         bgWidth=backgroundImg.getWidth();
         bgHeight= backgroundImg.getHeight();
-        Log.i(TAG, "defineSizeImg bgWidth= "+bgWidth+"; bgHeight= "+bgHeight);
+//        Log.i(TAG, "defineSizeImg bgWidth= "+bgWidth+"; bgHeight= "+bgHeight);
     }
 
     public void setSurfaceSize(int width, int height) {
+        Log.i(TAG, "Begin setSurfaceSize");
         synchronized (surfaceHolder) {
             mCanvasWidth = width;
             mCanvasHeight = height;
-//            Log.i(TAG, "setSurfaceSize 11111");
-            int coefficientX = bgWidth/width;
-            int coefficientY = bgHeight/height;
+//            Log.i(TAG, "mCanvasWidth = "+mCanvasWidth+"mCanvasHeight = "+mCanvasHeight);
+            float coefficientX = (float) bgWidth/width;
+            float coefficientY = (float) bgHeight/height;
             if(coefficientX > coefficientY){
                 coefficientScale = coefficientY;
             } else coefficientScale = coefficientX;
             backgroundImg = Bitmap.createScaledBitmap(
                     backgroundImg, width, height, true);
-            kuvshinka.resizeImg(coefficientScale);
-            player.resizeImg(coefficientScale);
-            hippo.resizeImg(coefficientScale);
+            resizeImg();
+            setState(STATE_RUNING);
+            Log.i(TAG, "Finish setSurfaceSize");
         }
     }
-
-    private void resizeImg() {
-
+    public void resizeImg(){
+        kuvshinka.resizeImg(coefficientScale);
+        player.resizeImg(coefficientScale);
+        hippo.resizeImg(coefficientScale);
     }
-
 
     public void run(){
         Canvas canvas;
@@ -114,12 +138,18 @@ public class MyThread extends Thread {
 
     private void doDraw(Canvas canvas) {
         canvas.drawBitmap(backgroundImg, 0, 0, null);
-        kuvshinka.getCurentImg().setBounds(kuvshinka.getX(), kuvshinka.getY(), kuvshinka.getCurentWidth(), kuvshinka.getCurentHeight());
+
+        kuvshinka.getCurentImg().setBounds(kuvshinka.getRect());
         kuvshinka.getCurentImg().draw(canvas);
 
+        hippo.getCurentImg().setBounds(hippo.getRect());
+        hippo.getCurentImg().draw(canvas);
+        Log.i(TAG, "hippo.getRect().width() = "+hippo.getRect().width()+"; hippo.getRect().height() = "+hippo.getRect().height());
+
         canvas.save();
-        canvas.rotate((float) player.getHeading(), player.getxHeading(), player.getyHeading());
-        player.getCurentImg().setBounds(player.getX(), player.getY(), player.getCurentWidth(), player.getCurentHeight());
+        Rect rect = new Rect(player.getRect());
+        canvas.rotate((float) player.getHeading(), rect.centerX(), rect.centerY());
+        player.getCurentImg().setBounds(rect);
         player.getCurentImg().draw(canvas);
         canvas.restore();
     }
