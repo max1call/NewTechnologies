@@ -16,6 +16,7 @@ import android.widget.TextView;
 public class MyView extends SurfaceView implements SurfaceHolder.Callback {
 
 //    Context c;
+    InputOutput inputOutput;
     MyThread thread ;
     private TextView mStatusText;
     MyView(Context context, AttributeSet attrs) {
@@ -24,6 +25,7 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         SurfaceHolder holder = getHolder();
         holder.addCallback(this);
 
+        inputOutput = new InputOutput(this);
         thread = new MyThread(holder, context, new Handler() {
             @Override
             public void handleMessage(Message m) {

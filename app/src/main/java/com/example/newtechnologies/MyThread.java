@@ -12,6 +12,8 @@ import android.view.SurfaceHolder;
 import android.widget.TextView;
 import android.os.Handler;
 
+import java.util.ArrayList;
+
 public class MyThread extends Thread implements Constants {
 
     String TAG="Target";
@@ -28,33 +30,62 @@ public class MyThread extends Thread implements Constants {
     Kuvshinka kuvshinka;
     Hippo hippo;
 
+    private ArrayList<Kuvshinka> arrayKuvshinka;
     Handler handler;
     TextView tv;
+    private boolean canResize;
 
     public MyThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
         Log.i(TAG, "Begin Constructor MyThread");
         this.surfaceHolder = surfaceHolder;
         this.handler = handler;
         this.context = context;
+        canResize = true;
         initImg();
         defineSizeImg();
-        makeStage1();
+
         Log.i(TAG, "Finish Constructor MyThread");
     }
 
     private void makeStage1() {
         Log.i(TAG, "Begin makeStage1");
+        arrayKuvshinka =new ArrayList<Kuvshinka>();
         int xPlayer=100;
         int yPlayer=100;
-        int xKuvshinka = 150;
-        int yKuvshinka = 100;
         int xHippo = 300;
         int yHippo = 200;
         player = new Player(context, xPlayer, yPlayer);
-        kuvshinka = new Kuvshinka(context, xKuvshinka, yKuvshinka);
+
+        int xKuvshinka1 = (int) (lengthJump/4.3);
+        int yKuvshinka1 = (int) (lengthJump/0.533);
+        newKuvshinka(xKuvshinka1, yKuvshinka1);
+
+        int xKuvshinka2 = (int) (lengthJump/1.6);
+        int yKuvshinka2 = calculateY(xKuvshinka1, yKuvshinka1, xKuvshinka2);
+        newKuvshinka(xKuvshinka2, yKuvshinka2);
+
+        xKuvshinka1 = (int) (lengthJump/0.711);
+        yKuvshinka1 = calculateY(xKuvshinka2, yKuvshinka2, xKuvshinka1);
+        newKuvshinka(xKuvshinka1, yKuvshinka1);
+
+        xKuvshinka2 = (int) (lengthJump/0.337);
+        yKuvshinka2 = calculateY(xKuvshinka1, yKuvshinka1, xKuvshinka2);
+        newKuvshinka(xKuvshinka2, yKuvshinka2);
+
         hippo = new Hippo(context, xHippo, yHippo);
         Log.i(TAG, "Finish makeStage1");
     }
+
+    private int calculateY(int x1, int y1, int x2) {
+        return (int) (Math.sqrt(lengthJump*lengthJump-(x2-x1)*(x2-x1))+y1);
+    }
+
+    private void newKuvshinka(int x, int y) {
+        kuvshinka = new Kuvshinka(context, x, y);
+        arrayKuvshinka.add(kuvshinka);
+    }
+
+
     public void setState(int state) {
         CharSequence str;
         curentState = state;
@@ -62,9 +93,9 @@ public class MyThread extends Thread implements Constants {
         if (curentState == STATE_RUNING) {
             player.setState(STATE_IDLE);
             hippo.setState(STATE_MOVE);
-        } else if (curentState == STATE_PAUSE) {
+        }else if (curentState == STATE_PAUSE) {
             str = context.getResources().getText(R.string.mode_pause);
-        } else if (curentState == STATE_LOSE) {
+        }else if (curentState == STATE_LOSE) {
             //game over
 
         } else if (curentState == STATE_WIN) {
@@ -89,7 +120,7 @@ public class MyThread extends Thread implements Constants {
         synchronized (surfaceHolder) {
             mCanvasWidth = width;
             mCanvasHeight = height;
-//            Log.i(TAG, "mCanvasWidth = "+mCanvasWidth+"mCanvasHeight = "+mCanvasHeight);
+            lengthJump = (int) (width/2.5);
             float coefficientX = (float) bgWidth/width;
             float coefficientY = (float) bgHeight/height;
             if(coefficientX > coefficientY){
@@ -98,14 +129,23 @@ public class MyThread extends Thread implements Constants {
             backgroundImg = Bitmap.createScaledBitmap(
                     backgroundImg, width, height, true);
             resizeImg();
+            makeStage1();
             setState(STATE_RUNING);
             Log.i(TAG, "Finish setSurfaceSize");
         }
     }
     public void resizeImg(){
-        kuvshinka.resizeImg(coefficientScale);
-        player.resizeImg(coefficientScale);
-        hippo.resizeImg(coefficientScale);
+        if (canResize) {
+            kuvshinka.resizeImg(coefficientScale);
+            player.resizeImg(coefficientScale);
+            hippo.resizeImg(coefficientScale);
+            canResize = false;
+        }
+    }
+    public void pause() {
+        synchronized (surfaceHolder) {
+            if (curentState == STATE_RUNING) setState(STATE_PAUSE);
+        }
     }
 
     public void run(){
@@ -114,7 +154,7 @@ public class MyThread extends Thread implements Constants {
             canvas=null;
             try{
                 canvas=surfaceHolder.lockCanvas();
-                if (canvas!=null){
+                if (canvas!=null && curentState == STATE_RUNING){
                     updatePhysics();
                     doDraw(canvas);
                 }
@@ -142,12 +182,15 @@ public class MyThread extends Thread implements Constants {
     private void doDraw(Canvas canvas) {
         canvas.drawBitmap(backgroundImg, 0, 0, null);
 
-        kuvshinka.getCurentImg().setBounds(kuvshinka.getRect());
-        kuvshinka.getCurentImg().draw(canvas);
+//        if(!arrayKuvshinka.isEmpty()) {
+        for(Kuvshinka kuvshinka : arrayKuvshinka){
+            kuvshinka.getCurentImg().setBounds(kuvshinka.getRect());
+            kuvshinka.getCurentImg().draw(canvas);
+        }
 
         hippo.getCurentImg().setBounds(hippo.getRect());
         hippo.getCurentImg().draw(canvas);
-        Log.i(TAG, "hippo.getRect().width() = "+hippo.getRect().width()+"; hippo.getRect().height() = "+hippo.getRect().height());
+//        Log.i(TAG, "hippo.getRect().width() = "+hippo.getRect().width()+"; hippo.getRect().height() = "+hippo.getRect().height());
 
         canvas.save();
         Rect rect = new Rect(player.getRect());
@@ -163,12 +206,6 @@ public class MyThread extends Thread implements Constants {
 
     public boolean doKeyUp(int keyCode, KeyEvent msg) {
         return true;
-    }
-
-    public void pause() {
-        synchronized (surfaceHolder) {
-            if (curentState == STATE_RUNING) setState(STATE_PAUSE);
-        }
     }
 
     public boolean doKeyDown(int keyCode, KeyEvent msg) {
