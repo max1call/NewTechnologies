@@ -23,6 +23,7 @@ public class MyThread extends Thread implements Constants {
     private int mCanvasWidth, mCanvasHeight, bgWidth, bgHeight;
     private float coefficientScale;
     private int lengthJump;
+    protected int curentState;
     Player player;
     Kuvshinka kuvshinka;
     Hippo hippo;
@@ -54,13 +55,15 @@ public class MyThread extends Thread implements Constants {
         hippo = new Hippo(context, xHippo, yHippo);
         Log.i(TAG, "Finish makeStage1");
     }
-    public void setState(int curentState) {
+    public void setState(int state) {
+        CharSequence str;
+        curentState = state;
         Log.i(TAG, "Begin setState");
         if (curentState == STATE_RUNING) {
             player.setState(STATE_IDLE);
             hippo.setState(STATE_MOVE);
         } else if (curentState == STATE_PAUSE) {
-
+            str = context.getResources().getText(R.string.mode_pause);
         } else if (curentState == STATE_LOSE) {
             //game over
 
@@ -163,6 +166,9 @@ public class MyThread extends Thread implements Constants {
     }
 
     public void pause() {
+        synchronized (surfaceHolder) {
+            if (curentState == STATE_RUNING) setState(STATE_PAUSE);
+        }
     }
 
     public boolean doKeyDown(int keyCode, KeyEvent msg) {
