@@ -3,17 +3,18 @@ package com.example.newtechnologies;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 
+import java.util.Map;
+
 public class Hippo extends PlayObject {
 
     private Drawable hippoImg;
     private int x, y, hippoWidth, hippoHeight;
 
-    Hippo(Context context, int x, int y){
-        super(context, x, y);
-        hippoImg = context.getResources().getDrawable(R.drawable.begemot);
-        ObjImg = hippoImg;
-        defineSizeImg();
-        curentImg = ObjImg;
+    Hippo(Map<String, Drawable> hashMapImg, Map<String, Integer> hashMapSize, int x, int y){
+        super(hashMapImg, hashMapSize, x, y);
+
+        curentImg = hashMapImg.get("hippoImg");
+        rect.set(x, y, x + hashMapSize.get("hippoWidth"), y + hashMapSize.get("hippoHeight"));
     }
     private void updatePhysics() {
 

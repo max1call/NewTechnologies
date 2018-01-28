@@ -5,20 +5,20 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 
+import java.util.Map;
+
 public class Kuvshinka extends PlayObject{
 
     private Drawable kuvshinkaImg;
 //    private int kuvshinkaWidth, kuvshinkaHeight;
 //    Rect rect;
 
-    Kuvshinka(Context context, int x, int y){
-        super(context, x, y);
-        Log.i(TAG, "Kuvshinka Begin Constr");
-        kuvshinkaImg = context.getResources().getDrawable(R.drawable.kuvshinka);
-        ObjImg = kuvshinkaImg;
-        defineSizeImg();
-        curentImg = ObjImg;
-        Log.i(TAG, "Kuvshinka Finish Constr");
+    Kuvshinka(Map<String, Drawable> hashMapImg, Map<String, Integer> hashMapSize, int x, int y){
+        super(hashMapImg, hashMapSize, x, y);
+//        Log.i(TAG, "Kuvshinka Begin Constr");
+        curentImg = hashMapImg.get("kuvshinkaImg");
+        rect.set(x, y, x + hashMapSize.get("kuvshinkaWidth"), y + hashMapSize.get("kuvshinkaHeight"));
+//        Log.i(TAG, "Kuvshinka Finish Constr");
     }
 
 //    private void defineSizeImg() {

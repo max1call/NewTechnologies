@@ -7,7 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.util.DisplayMetrics;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -17,9 +17,8 @@ import android.widget.TextView;
 import android.os.Handler;
 
 import java.util.ArrayList;
-
-import static android.content.Context.ACTIVITY_SERVICE;
-import static android.content.Context.WINDOW_SERVICE;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MyThread extends Thread implements Constants {
 
@@ -28,8 +27,10 @@ public class MyThread extends Thread implements Constants {
     private SurfaceHolder surfaceHolder;
     private Context context;
     private Bitmap backgroundImg;
-    private Drawable idle_frog_img, fly_frog_img, bulk_img, kuvshinka_img;
+    protected Drawable kuvshinkaImg, idleFrogImg, flyFrogImg, bulkImg, hippoImg;
     private int mCanvasWidth, mCanvasHeight, bgWidth, bgHeight;
+    private int idleFrogWidth, idleFrogHeight, flyFrogWidth, flyFrogHeight, bulkWidth,
+            bulkHeight, kuvshinkaWidth, kuvshinkaHeight, hippoWidth, hippoHeight;
     private float coefficientScale;
     private int lengthJump;
     protected int curentState;
@@ -37,6 +38,9 @@ public class MyThread extends Thread implements Constants {
     Player player;
     Kuvshinka kuvshinka;
     Hippo hippo;
+    Bundle bundleImg;
+    Map<String, Drawable> hashMapImg;
+    Map<String, Integer> hashMapSize;
 
     private ArrayList<Kuvshinka> arrayKuvshinka;
     Handler handler;
@@ -52,28 +56,86 @@ public class MyThread extends Thread implements Constants {
         initImg();
         defineSizeImg();
         calcullateScale();
-        makeStage1();
         resizeImg();
+        putToHash();
+        makeStage1();
         setState(STATE_RUNING);
         Log.i(TAG, "Finish Constructor MyThread");
     }
 
+    private void initImg() {
+        backgroundImg = BitmapFactory.decodeResource(context.getResources(), R.drawable.background2);
+        kuvshinkaImg = context.getResources().getDrawable(R.drawable.kuvshinka);
+        idleFrogImg = context.getResources().getDrawable(R.drawable.idle_frog);
+        flyFrogImg = context.getResources().getDrawable(R.drawable.fly_frog);
+        bulkImg = context.getResources().getDrawable(R.drawable.bulk);
+        hippoImg = context.getResources().getDrawable(R.drawable.begemot);
+    }
+    private void defineSizeImg() {
+        bgWidth=backgroundImg.getWidth();
+        bgHeight= backgroundImg.getHeight();
+        idleFrogWidth = idleFrogImg.getIntrinsicWidth();
+        idleFrogHeight = idleFrogImg.getIntrinsicHeight();
+        flyFrogWidth = flyFrogImg.getIntrinsicWidth();
+        flyFrogHeight = flyFrogImg.getIntrinsicHeight();
+        bulkWidth = bulkImg.getIntrinsicWidth();
+        bulkHeight = bulkImg.getIntrinsicHeight();
+        kuvshinkaWidth = kuvshinkaImg.getIntrinsicWidth();//
+        kuvshinkaHeight = kuvshinkaImg.getIntrinsicHeight();
+        hippoWidth = hippoImg.getIntrinsicWidth();
+        hippoHeight = hippoImg.getIntrinsicHeight();
+//        Log.i(TAG, "defineSizeImg bgWidth= "+bgWidth+"; bgHeight= "+bgHeight);
+    }
     private void calcullateScale() {
         rectDisplay = new Rect();
         WindowManager w = ((Activity) context).getWindowManager();
         Display d = w.getDefaultDisplay();
         d.getRectSize(rectDisplay);
-
         mCanvasWidth = rectDisplay.width();
         mCanvasHeight = rectDisplay.height();
-        Log.w(TAG, "!!!!!!!!!!!!! mCanvasWidth= "+mCanvasWidth+"; mCanvasHeight= "+mCanvasHeight);
-
-        lengthJump = (int) (mCanvasWidth/2.5);
+//        Log.w(TAG, "!!!!!!!!!!!!! mCanvasWidth= "+mCanvasWidth+"; mCanvasHeight= "+mCanvasHeight);
+        lengthJump = (int) (mCanvasWidth/5);
         float coefficientX = (float) bgWidth/mCanvasWidth;
         float coefficientY = (float) bgHeight/mCanvasHeight;
         if(coefficientX > coefficientY){
             coefficientScale = coefficientY;
         } else coefficientScale = coefficientX;
+    }
+    public void resizeImg(){
+        if (canResize) {
+            idleFrogWidth = (int) (idleFrogWidth/coefficientScale);
+            idleFrogHeight = (int) (idleFrogHeight/coefficientScale);
+            flyFrogWidth = (int) (flyFrogWidth/coefficientScale);
+            flyFrogHeight = (int) (flyFrogHeight/coefficientScale);
+            bulkWidth = (int) (bulkWidth/coefficientScale);
+            bulkHeight = (int) (bulkHeight/coefficientScale);
+            kuvshinkaWidth = (int) (kuvshinkaWidth/coefficientScale);
+            kuvshinkaHeight = (int) (kuvshinkaHeight/coefficientScale);
+            hippoWidth = (int) (hippoWidth/coefficientScale);
+            hippoHeight = (int) (hippoHeight/coefficientScale);
+            canResize = false;
+
+        }
+    }
+    private void putToHash() {
+        hashMapImg = new HashMap<String, Drawable>();
+        hashMapImg.put("kuvshinkaImg", kuvshinkaImg);
+        hashMapImg.put("idleFrogImg", idleFrogImg);
+        hashMapImg.put("flyFrogImg", flyFrogImg);
+        hashMapImg.put("bulkImg", bulkImg);
+        hashMapImg.put("hippoImg", hippoImg);
+
+        hashMapSize = new HashMap<String, Integer>();
+        hashMapSize.put("idleFrogWidth",idleFrogWidth);
+        hashMapSize.put("idleFrogHeight",idleFrogHeight);
+        hashMapSize.put("flyFrogWidth",flyFrogWidth);
+        hashMapSize.put("flyFrogHeight",flyFrogHeight);
+        hashMapSize.put("bulkWidth",bulkWidth);
+        hashMapSize.put("bulkHeight",bulkHeight);
+        hashMapSize.put("kuvshinkaWidth",kuvshinkaWidth);
+        hashMapSize.put("kuvshinkaHeight",kuvshinkaHeight);
+        hashMapSize.put("hippoWidth",hippoWidth);
+        hashMapSize.put("hippoHeight",hippoHeight);
     }
 
     private void makeStage1() {
@@ -83,7 +145,7 @@ public class MyThread extends Thread implements Constants {
         int yPlayer=100;
         int xHippo = 300;
         int yHippo = 200;
-        player = new Player(context, xPlayer, yPlayer);
+        player = new Player(hashMapImg, hashMapSize , xPlayer, yPlayer);
 
         int xKuvshinka1 = (int) (lengthJump/4.3);
         int yKuvshinka1 = (int) (lengthJump/0.533);
@@ -107,7 +169,7 @@ public class MyThread extends Thread implements Constants {
         newKuvshinka(xKuvshinka2, yKuvshinka2);
         Log.w(TAG, "Kuvshinka4 ready");
 
-        hippo = new Hippo(context, xHippo, yHippo);
+        hippo = new Hippo(hashMapImg, hashMapSize , xHippo, yHippo);
         Log.i(TAG, "Finish makeStage1");
     }
 
@@ -116,7 +178,7 @@ public class MyThread extends Thread implements Constants {
     }
     int i=0;
     private void newKuvshinka(int x, int y) {
-        kuvshinka = new Kuvshinka(context, x, y);
+        kuvshinka = new Kuvshinka(hashMapImg, hashMapSize , x, y);
         arrayKuvshinka.add(kuvshinka);
 
         i++;
@@ -142,17 +204,6 @@ public class MyThread extends Thread implements Constants {
         Log.i(TAG, "Finish setState");
     }
 
-    private void initImg() {
-        backgroundImg = BitmapFactory.decodeResource(context.getResources(), R.drawable.background2);
-
-    }
-
-    private void defineSizeImg() {
-        bgWidth=backgroundImg.getWidth();
-        bgHeight= backgroundImg.getHeight();
-//        Log.i(TAG, "defineSizeImg bgWidth= "+bgWidth+"; bgHeight= "+bgHeight);
-    }
-
     public void setSurfaceSize(int width, int height) {
         Log.i(TAG, "Begin setSurfaceSize");
         synchronized (surfaceHolder) {
@@ -161,14 +212,7 @@ public class MyThread extends Thread implements Constants {
             Log.i(TAG, "Finish setSurfaceSize");
         }
     }
-    public void resizeImg(){
-        if (canResize) {
-            kuvshinka.resizeImg(coefficientScale);
-            player.resizeImg(coefficientScale);
-            hippo.resizeImg(coefficientScale);
-            canResize = false;
-        }
-    }
+
     public void pause() {
         synchronized (surfaceHolder) {
             if (curentState == STATE_RUNING) setState(STATE_PAUSE);
@@ -214,9 +258,8 @@ public class MyThread extends Thread implements Constants {
         for(Kuvshinka k : arrayKuvshinka){
             k.getCurentImg().setBounds(k.getRect());
             k.getCurentImg().draw(canvas);
-
             i++;
-            Log.w(TAG, "Kuvshinka "+i+" draw");
+            Log.w(TAG, "Kuvshinka "+i+" draw; getRect().width= "+k.getRect().width());
         }
 
         //TODO background into obj
