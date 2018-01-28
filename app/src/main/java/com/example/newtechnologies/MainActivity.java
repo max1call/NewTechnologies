@@ -1,18 +1,23 @@
 package com.example.newtechnologies;
 
 import android.app.Activity;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
+import android.view.WindowManager;
 import android.widget.TextView;
+
+import javax.security.auth.login.LoginException;
 
 public class MainActivity extends Activity {
 
     Handler handler;
 //    String s;
-//    String TAG="Target";
+    String TAG="Target";
 //    TextView tv;
     MyView myView;
     MyThread myThread; //итак создается во view
@@ -23,6 +28,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         myView= (MyView) findViewById(R.id.myview);
         myThread=myView.getThread();
+//        Log.w(TAG, "Main: myThread=myView.getThread()");
 
 //        tv = (TextView) findViewById(R.id.tv);
 //        tv.setText("This is main");
@@ -46,4 +52,12 @@ public class MainActivity extends Activity {
 //            }
 //        }
     }
+//    public Rect scale(){
+//        Rect rect = new Rect();
+//        WindowManager w = this.getWindowManager();
+//        Display d = w.getDefaultDisplay();
+//        d.getRectSize(rect);
+//        return rect;
+//
+//    }
 }

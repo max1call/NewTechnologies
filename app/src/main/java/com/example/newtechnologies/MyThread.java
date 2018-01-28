@@ -1,18 +1,25 @@
 package com.example.newtechnologies;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.view.SurfaceHolder;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.os.Handler;
 
 import java.util.ArrayList;
+
+import static android.content.Context.ACTIVITY_SERVICE;
+import static android.content.Context.WINDOW_SERVICE;
 
 public class MyThread extends Thread implements Constants {
 
@@ -26,6 +33,7 @@ public class MyThread extends Thread implements Constants {
     private float coefficientScale;
     private int lengthJump;
     protected int curentState;
+    private Rect rectDisplay;
     Player player;
     Kuvshinka kuvshinka;
     Hippo hippo;
@@ -43,8 +51,29 @@ public class MyThread extends Thread implements Constants {
         canResize = true;
         initImg();
         defineSizeImg();
-
+        calcullateScale();
+        makeStage1();
+        resizeImg();
+        setState(STATE_RUNING);
         Log.i(TAG, "Finish Constructor MyThread");
+    }
+
+    private void calcullateScale() {
+        rectDisplay = new Rect();
+        WindowManager w = ((Activity) context).getWindowManager();
+        Display d = w.getDefaultDisplay();
+        d.getRectSize(rectDisplay);
+
+        mCanvasWidth = rectDisplay.width();
+        mCanvasHeight = rectDisplay.height();
+        Log.w(TAG, "!!!!!!!!!!!!! mCanvasWidth= "+mCanvasWidth+"; mCanvasHeight= "+mCanvasHeight);
+
+        lengthJump = (int) (mCanvasWidth/2.5);
+        float coefficientX = (float) bgWidth/mCanvasWidth;
+        float coefficientY = (float) bgHeight/mCanvasHeight;
+        if(coefficientX > coefficientY){
+            coefficientScale = coefficientY;
+        } else coefficientScale = coefficientX;
     }
 
     private void makeStage1() {
@@ -59,18 +88,24 @@ public class MyThread extends Thread implements Constants {
         int xKuvshinka1 = (int) (lengthJump/4.3);
         int yKuvshinka1 = (int) (lengthJump/0.533);
         newKuvshinka(xKuvshinka1, yKuvshinka1);
+        Log.w(TAG, "Kuvshinka1 ready");
 
         int xKuvshinka2 = (int) (lengthJump/1.6);
         int yKuvshinka2 = calculateY(xKuvshinka1, yKuvshinka1, xKuvshinka2);
         newKuvshinka(xKuvshinka2, yKuvshinka2);
 
+        Log.w(TAG, "Kuvshinka2 ready");
+
+
         xKuvshinka1 = (int) (lengthJump/0.711);
         yKuvshinka1 = calculateY(xKuvshinka2, yKuvshinka2, xKuvshinka1);
         newKuvshinka(xKuvshinka1, yKuvshinka1);
+        Log.w(TAG, "Kuvshinka3 ready");
 
         xKuvshinka2 = (int) (lengthJump/0.337);
         yKuvshinka2 = calculateY(xKuvshinka1, yKuvshinka1, xKuvshinka2);
         newKuvshinka(xKuvshinka2, yKuvshinka2);
+        Log.w(TAG, "Kuvshinka4 ready");
 
         hippo = new Hippo(context, xHippo, yHippo);
         Log.i(TAG, "Finish makeStage1");
@@ -79,10 +114,13 @@ public class MyThread extends Thread implements Constants {
     private int calculateY(int x1, int y1, int x2) {
         return (int) (Math.sqrt(lengthJump*lengthJump-(x2-x1)*(x2-x1))+y1);
     }
-
+    int i=0;
     private void newKuvshinka(int x, int y) {
         kuvshinka = new Kuvshinka(context, x, y);
         arrayKuvshinka.add(kuvshinka);
+
+        i++;
+        Log.w(TAG, "Kuvshinka "+i+" add to array");
     }
 
 
@@ -118,19 +156,8 @@ public class MyThread extends Thread implements Constants {
     public void setSurfaceSize(int width, int height) {
         Log.i(TAG, "Begin setSurfaceSize");
         synchronized (surfaceHolder) {
-            mCanvasWidth = width;
-            mCanvasHeight = height;
-            lengthJump = (int) (width/2.5);
-            float coefficientX = (float) bgWidth/width;
-            float coefficientY = (float) bgHeight/height;
-            if(coefficientX > coefficientY){
-                coefficientScale = coefficientY;
-            } else coefficientScale = coefficientX;
             backgroundImg = Bitmap.createScaledBitmap(
                     backgroundImg, width, height, true);
-            resizeImg();
-            makeStage1();
-            setState(STATE_RUNING);
             Log.i(TAG, "Finish setSurfaceSize");
         }
     }
@@ -183,10 +210,16 @@ public class MyThread extends Thread implements Constants {
         canvas.drawBitmap(backgroundImg, 0, 0, null);
 
 //        if(!arrayKuvshinka.isEmpty()) {
-        for(Kuvshinka kuvshinka : arrayKuvshinka){
-            kuvshinka.getCurentImg().setBounds(kuvshinka.getRect());
-            kuvshinka.getCurentImg().draw(canvas);
+        int i=0;
+        for(Kuvshinka k : arrayKuvshinka){
+            k.getCurentImg().setBounds(k.getRect());
+            k.getCurentImg().draw(canvas);
+
+            i++;
+            Log.w(TAG, "Kuvshinka "+i+" draw");
         }
+
+        //TODO background into obj
 
         hippo.getCurentImg().setBounds(hippo.getRect());
         hippo.getCurentImg().draw(canvas);

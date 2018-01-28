@@ -4,9 +4,12 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 /**
@@ -21,11 +24,13 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
     private TextView mStatusText;
     MyView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        Log.w("Target", "MyView: Constructor begin");
 //        c=context;
         SurfaceHolder holder = getHolder();
         holder.addCallback(this);
 
         inputOutput = new InputOutput(this);
+        Log.w("Target", "MyView: thread = new MyThread(holder, context...");
         thread = new MyThread(holder, context, new Handler() {
             @Override
             public void handleMessage(Message m) {
@@ -36,7 +41,8 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
 
 
         setFocusable(true);
-}
+    }
+
     public MyThread getThread() {
         return thread;
     }
