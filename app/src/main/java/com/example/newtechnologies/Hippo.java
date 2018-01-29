@@ -7,23 +7,25 @@ import java.util.Map;
 
 public class Hippo extends PlayObject {
 
-    private Drawable hippoImg;
-    private int x, y, hippoWidth, hippoHeight;
+//    private Drawable hippoImg;
+    private int dy, speed, maxCanvasHeight, minCanvasHeight ;//x, y, hippoWidth, hippoHeight;
 
     Hippo(Map<String, Drawable> hashMapImg, Map<String, Integer> hashMapSize, int x, int y){
         super(hashMapImg, hashMapSize, x, y);
-
         curentImg = hashMapImg.get("hippoImg");
         rect.set(x, y, x + hashMapSize.get("hippoWidth"), y + hashMapSize.get("hippoHeight"));
+        maxCanvasHeight = (int) (hashMapSize.get("mCanvasHeight")*0.9);
+        minCanvasHeight = (int) (hashMapSize.get("mCanvasHeight")*0.07);
     }
-    private void updatePhysics() {
-
+    public void updatePhysics() {
+        rect.offset(0, speed);
+        if (rect.bottom > maxCanvasHeight || rect.top < minCanvasHeight) speed=(-1)*speed;
     }
     public void setState(int curentState) {
         if (curentState == STATE_MOVE) {
-
+            speed = hashMapSize.get("lengthJump")/100;
         } else if (curentState == STATE_IDLE) {
-
+            speed = 0;
         }
     }
 //    private void defineSizeImg() {

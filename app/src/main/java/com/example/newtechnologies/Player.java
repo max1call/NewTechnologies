@@ -27,7 +27,7 @@ public class Player extends PlayObject implements Constants {
 //        Log.i(TAG, "Player Begin Constr ");
 //        initImg(context);
 //        defineSizeImg();
-        heading = 10;
+        heading = 90;
         setState(STATE_IDLE);
 //        Log.i(TAG, "Player Finish Constr ");
     }
