@@ -156,6 +156,7 @@ public class MyThread extends Thread implements Constants {
         arrayKuvshinka =new ArrayList<Kuvshinka>();
         int xPlayer=100;
         int yPlayer=100;
+        int speedFly=10;
         int xHippo = 300;
         int yHippo = 200;
         int kHeading;
@@ -192,7 +193,7 @@ public class MyThread extends Thread implements Constants {
         yKuvshinka -= (int) (lengthJump*Math.cos(radians));
         newKuvshinka(xKuvshinka, yKuvshinka);
 //        Log.w("draw1", "new Kuvshinka2 x= "+xKuvshinka2+"; y= "+yKuvshinka2+"; lengthJump= "+lengthJump);
-        player = new Player(hashMapImg, hashMapSize , xPlayer, yPlayer, handler);
+        player = new Player(hashMapImg, hashMapSize , xPlayer, yPlayer, speedFly, arrayKuvshinka, handler);
         hippo = new Hippo(hashMapImg, hashMapSize , xHippo, yHippo);
         inputOutput = new InputOutput(myView, player, this);
 //        Log.i(TAG, "Finish makeStage1");
