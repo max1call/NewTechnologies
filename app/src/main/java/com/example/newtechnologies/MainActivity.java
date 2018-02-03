@@ -15,19 +15,34 @@ import javax.security.auth.login.LoginException;
 
 public class MainActivity extends Activity {
 
-    Handler handler;
-//    String s;
     String TAG="Target";
-//    TextView tv;
     MyView myView;
-    MyThread myThread; //итак создается во view
+    MyThread myThread;
+    public TextView tvt1;
+    public TextView tvt2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        handler = new Handler() {
+//            public void handleMessage(Message msg) {
+//                if (msg.what == 1) {
+//                    str = "down x= " + msg.arg1 + "; y= " + msg.arg2;
+//                    tvt1.setText(str);
+//                }
+//                if (msg.what == 2) {
+//                    str = "down x= " + msg.arg1 + "; y= " + msg.arg2;
+//                    tvt2.setText(str);
+//                }
+//            }
+//        };
         setContentView(R.layout.activity_main);
         myView= (MyView) findViewById(R.id.myview);
         myThread=myView.getThread();
+        tvt1 = (TextView) findViewById(R.id.tv1);
+        tvt2 = (TextView) findViewById(R.id.tv2);
+        myView.setTextView(tvt1, tvt2);
+
 //        Log.w(TAG, "Main: myThread=myView.getThread()");
 
 //        tv = (TextView) findViewById(R.id.tv);
@@ -52,6 +67,9 @@ public class MainActivity extends Activity {
 //            }
 //        }
     }
+//    public Handler getHandler(){
+//        return handler;
+//    }
 //    public Rect scale(){
 //        Rect rect = new Rect();
 //        WindowManager w = this.getWindowManager();

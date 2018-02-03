@@ -10,13 +10,17 @@ import android.widget.TextView;
 
 public class InputOutput implements OnTouchListener{
 
+    Player player;
+    MyThread thread;
     float x;
     float y;
     MyView myView;
-    String TAG="Target";
+    String TAG="fly";
 
-    public InputOutput(MyView myView) {
+    public InputOutput(MyView myView, Player player, MyThread myThread) {
+        thread = myThread;
         this.myView = myView;
+        this.player = player;
         myView.setOnTouchListener(this);
     }
 //    /** Called when the activity is first created. */
@@ -34,14 +38,20 @@ public class InputOutput implements OnTouchListener{
         y = event.getY();
 
         switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN: // нажатие
+            case MotionEvent.ACTION_DOWN: { // нажатие
                 Log.w(TAG, "Down: " + x + "," + y);
+                player.setTouchDown(x, y);
+//                thread.showCoordDown(x, y);
                 break;
+            }
             case MotionEvent.ACTION_MOVE: // движение
+                player.setHeading(x, y);
                 Log.w(TAG, "Move: " + x + "," + y);
                 break;
             case MotionEvent.ACTION_UP: // отпускание
             case MotionEvent.ACTION_CANCEL:
+                player.setTouchUp(x, y);
+//                thread.showCoordUp(x, y);
                 Log.w(TAG, "Up: " + x + "," + y);
                 break;
         }

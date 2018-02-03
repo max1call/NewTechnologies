@@ -12,34 +12,39 @@ import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-/**
- * Created by асер on 25.01.2018.
- */
 
 public class MyView extends SurfaceView implements SurfaceHolder.Callback {
 
 //    Context c;
-    InputOutput inputOutput;
+
     MyThread thread ;
-    private TextView mStatusText;
+    public TextView tvt1;
+    public TextView tvt2;
+    CharSequence str;
+
     MyView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        Log.w("Target", "MyView: Constructor begin");
-//        c=context;
+//        Log.w("Target", "MyView: Constructor begin");
         SurfaceHolder holder = getHolder();
         holder.addCallback(this);
 
-        inputOutput = new InputOutput(this);
+        tvt1 = (TextView) findViewById(R.id.tv1);
+        tvt2 = (TextView) findViewById(R.id.tv2);
+
         Log.w("Target", "MyView: thread = new MyThread(holder, context...");
-        thread = new MyThread(holder, context, new Handler() {
+        thread = new MyThread(this, holder, context, new Handler() {
             @Override
             public void handleMessage(Message m) {
-                mStatusText.setVisibility(m.getData().getInt("viz"));
-                mStatusText.setText(m.getData().getString("text"));
+                if(m.what==1){
+                    str = "down x= "+m.arg1+"; y= "+m.arg2;
+                    tvt1.setText(str);
+                }
+                if(m.what==2){
+                    str = "down x= "+m.arg1+"; y= "+m.arg2;
+                    tvt2.setText(str);
+                }
             }
         });
-
-
         setFocusable(true);
     }
 
@@ -47,15 +52,15 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         return thread;
     }
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent msg) {
-        return thread.doKeyDown(keyCode, msg);
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent msg) {
-        return thread.doKeyUp(keyCode, msg);
-    }
+//    @Override
+//    public boolean onKeyDown(int keyCode, KeyEvent msg) {
+//        return thread.doKeyDown(keyCode, msg);
+//    }
+//
+//    @Override
+//    public boolean onKeyUp(int keyCode, KeyEvent msg) {
+//        return thread.doKeyUp(keyCode, msg);
+//    }
 
     @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
@@ -87,4 +92,8 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    public void setTextView(TextView tvt1, TextView tvt2) {
+        this.tvt1=tvt1;
+        this.tvt2=tvt2;
+    }
 }

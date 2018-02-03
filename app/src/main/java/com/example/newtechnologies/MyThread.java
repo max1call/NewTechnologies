@@ -5,9 +5,12 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -39,15 +42,22 @@ public class MyThread extends Thread implements Constants {
     Player player;
     Kuvshinka kuvshinka;
     Hippo hippo;
-    Bundle bundleImg;
     Map<String, Drawable> hashMapImg;
     Map<String, Integer> hashMapSize;
     Handler handler;
     TextView tv;
     private boolean canResize;
+    InputOutput inputOutput;
+    MyView myView;
+    Paint paint;
+    Message msg;
+    public TextView tvt1;
+    public TextView tvt2;
+    MainActivity m;
 
-    public MyThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
+    public MyThread(MyView myView, SurfaceHolder surfaceHolder, Context context, Handler handler) {
         Log.i(TAG, "Begin Constructor MyThread");
+        this.myView = myView;
         this.surfaceHolder = surfaceHolder;
         this.handler = handler;
         this.context = context;
@@ -58,10 +68,13 @@ public class MyThread extends Thread implements Constants {
         resizeImg();
         putToHash();
         makeStage1();
+        running = false;
         setState(STATE_RUNING);
+        paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setStyle(Paint.Style.STROKE);
         Log.i(TAG, "Finish Constructor MyThread");
     }
-
     private void initImg() {
         backgroundImg = BitmapFactory.decodeResource(context.getResources(), R.drawable.background2);
         kuvshinkaImg = context.getResources().getDrawable(R.drawable.kuvshinka);
@@ -138,7 +151,6 @@ public class MyThread extends Thread implements Constants {
         hashMapSize.put("mCanvasWidth",mCanvasWidth);
         hashMapSize.put("mCanvasHeight",mCanvasHeight);
     }
-
     private void makeStage1() {
         Log.i(TAG, "Begin makeStage1");
         arrayKuvshinka =new ArrayList<Kuvshinka>();
@@ -156,11 +168,10 @@ public class MyThread extends Thread implements Constants {
         yPlayer = yKuvshinka+(kuvshinkaHeight-idleFrogHeight)/2;
 
         kHeading = 45;
-        radians = 2 * Math.PI * kHeading / 360;
+        radians = 2 * Math.PI * kHeading / 360;//double radians;
         xKuvshinka += (int) (lengthJump*Math.sin(radians));
         yKuvshinka -= (int) (lengthJump*Math.cos(radians));
         newKuvshinka(xKuvshinka, yKuvshinka);
-//        Log.w("draw1", "new Kuvshinka1 x= "+xKuvshinka1+"; y= "+yKuvshinka1+"; lengthJump= "+lengthJump);
 
         kHeading = 115;
         radians = 2 * Math.PI * kHeading / 360;
@@ -168,8 +179,6 @@ public class MyThread extends Thread implements Constants {
         yKuvshinka -= (int) (lengthJump*Math.cos(radians));
         newKuvshinka(xKuvshinka, yKuvshinka);
 
-//        Log.w("draw1", "new Kuvshinka2 x= "+xKuvshinka2+"; y= "+yKuvshinka2+"; lengthJump= "+lengthJump);
-//
         kHeading = 90;
         radians = 2 * Math.PI * kHeading / 360;
         xKuvshinka += (int) (lengthJump*Math.sin(radians));
@@ -177,26 +186,22 @@ public class MyThread extends Thread implements Constants {
         xHippo = xKuvshinka;
         yHippo = yKuvshinka;
 
-//        newKuvshinka(xKuvshinka, yKuvshinka);
-//        Log.w("draw1", "new Kuvshinka1 x= "+xKuvshinka1+"; y= "+yKuvshinka1+"; lengthJump= "+lengthJump);
-//
         kHeading = 45;
         radians = 2 * Math.PI * kHeading / 360;
         xKuvshinka += (int) (lengthJump*Math.sin(radians));
         yKuvshinka -= (int) (lengthJump*Math.cos(radians));
         newKuvshinka(xKuvshinka, yKuvshinka);
 //        Log.w("draw1", "new Kuvshinka2 x= "+xKuvshinka2+"; y= "+yKuvshinka2+"; lengthJump= "+lengthJump);
-        player = new Player(hashMapImg, hashMapSize , xPlayer, yPlayer);
+        player = new Player(hashMapImg, hashMapSize , xPlayer, yPlayer, handler);
         hippo = new Hippo(hashMapImg, hashMapSize , xHippo, yHippo);
-        Log.i(TAG, "Finish makeStage1");
+        inputOutput = new InputOutput(myView, player, this);
+//        Log.i(TAG, "Finish makeStage1");
     }
 
-    int i=0;
     private void newKuvshinka(int x, int y) {
         kuvshinka = new Kuvshinka(hashMapImg, hashMapSize , x, y);
         arrayKuvshinka.add(kuvshinka);
     }
-
 
     public void setState(int state) {
         CharSequence str;
@@ -205,15 +210,19 @@ public class MyThread extends Thread implements Constants {
         if (curentState == STATE_RUNING) {
             player.setState(STATE_IDLE);
             hippo.setState(STATE_MOVE);
+//            paint.setColor(Color.BLACK);
+            running = true;
         }else if (curentState == STATE_PAUSE) {
             str = context.getResources().getText(R.string.mode_pause);
+            running = false;
         }else if (curentState == STATE_LOSE) {
+
             //game over
 
         } else if (curentState == STATE_WIN) {
             //win
         }
-        Log.i(TAG, "Finish setState");
+//        Log.i(TAG, "Finish setState");
     }
 
     public void setSurfaceSize(int width, int height) {
@@ -238,11 +247,11 @@ public class MyThread extends Thread implements Constants {
             try{
                 canvas=surfaceHolder.lockCanvas();
                 if (canvas!=null && curentState == STATE_RUNING){
-//                    try{
-//                        Thread.sleep(1);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
+                    try{
+                        Thread.sleep(40);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     updatePhysics();
                     doDraw(canvas);
                 }
@@ -262,7 +271,14 @@ public class MyThread extends Thread implements Constants {
 //           Log.i("Target", "Handler is here!");
 //        }
     }
-
+//    public void showCoordDown(float x, float y){
+//        msg = handler.obtainMessage(1, (int) x, (int) y);
+//        handler.sendMessage(msg);
+//    }
+//    public void showCoordUp(float x, float y){
+//        msg = handler.obtainMessage(2, (int) x, (int) y);
+//        handler.sendMessage(msg);
+//    }
     private void updatePhysics() {
 //        long now = System.currentTimeMillis();
 //        if (mLastTime > now) return;
@@ -274,15 +290,10 @@ public class MyThread extends Thread implements Constants {
     private void doDraw(Canvas canvas) {
         canvas.drawBitmap(backgroundImg, 0, 0, null);
 
-//        if(!arrayKuvshinka.isEmpty()) {
-        int i=0;
         for(Kuvshinka k : arrayKuvshinka){
             k.getCurentImg().setBounds(k.getRect());
             k.getCurentImg().draw(canvas);
-            i++;
-            Log.w("draw1", "Kuvshinka "+i+" width= "+k.getRect().width()+"; height= "+k.getRect().height());
         }
-
         //TODO background into obj
 
         hippo.getCurentImg().setBounds(hippo.getRect());
@@ -294,6 +305,7 @@ public class MyThread extends Thread implements Constants {
         canvas.rotate((float) player.getHeading(), rect.centerX(), rect.centerY());
         player.getCurentImg().setBounds(rect);
         player.getCurentImg().draw(canvas);
+        canvas.drawRect(rect, paint);
         canvas.restore();
     }
 
@@ -301,11 +313,13 @@ public class MyThread extends Thread implements Constants {
         running = b;
     }
 
-    public boolean doKeyUp(int keyCode, KeyEvent msg) {
-        return true;
-    }
+//    public boolean doKeyUp(int keyCode, KeyEvent msg) {
+//        return true;
+//    }
+//
+//    public boolean doKeyDown(int keyCode, KeyEvent msg) {
+//        return true;
+//    }
 
-    public boolean doKeyDown(int keyCode, KeyEvent msg) {
-        return true;
-    }
+
 }
