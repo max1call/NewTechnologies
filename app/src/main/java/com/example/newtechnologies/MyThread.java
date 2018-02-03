@@ -310,6 +310,7 @@ public class MyThread extends Thread implements Constants {
         canvas.restore();
     }
 
+
     public void setRunning(boolean b) {
         running = b;
     }
