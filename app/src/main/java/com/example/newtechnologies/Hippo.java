@@ -5,7 +5,7 @@ import android.graphics.drawable.Drawable;
 
 import java.util.Map;
 
-public class Hippo extends PlayObject {
+public class Hippo extends PlayObject implements Constants {
 
 //    private Drawable hippoImg;
     private int dy, speed, maxCanvasHeight, minCanvasHeight ;//x, y, hippoWidth, hippoHeight;
@@ -16,6 +16,7 @@ public class Hippo extends PlayObject {
         rect.set(x, y, x + hashMapSize.get("hippoWidth"), y + hashMapSize.get("hippoHeight"));
         maxCanvasHeight = (int) (hashMapSize.get("mCanvasHeight")*0.9);
         minCanvasHeight = (int) (hashMapSize.get("mCanvasHeight")*0.07);
+        setState(STATE_MOVE);
     }
     public void updatePhysics() {
         rect.offset(0, speed);

@@ -36,7 +36,7 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
             @Override
             public void handleMessage(Message m) {
                 if(m.what==1){
-                    str = "readXY= "+m.getData().getBoolean("readXY");
+                    str = "countLive= "+m.getData().getInt("countLive");
                     tvt1.setText(str);
                 }
                 if(m.what==2){

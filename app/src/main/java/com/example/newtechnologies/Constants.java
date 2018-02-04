@@ -9,6 +9,8 @@ public interface Constants {
     public static final int STATE_WIN = 5;
     public static final int STATE_RUNING = 6;
     public static final int STATE_PAUSE = 7;
+    public static final int STATE_ONHIPPO = 8;
+
 
 
 }

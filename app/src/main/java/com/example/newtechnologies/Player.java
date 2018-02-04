@@ -21,16 +21,18 @@ public class Player extends PlayObject implements Constants {
     Message msg;
     Handler handler;
     MyThread myThread;
+    Hippo hippo;
     int timeUnderWater;
     long now;
 
     Player(Map<String, Drawable> hashMapImg, Map<String, Integer> hashMapSize, int x, int y, int speedFly,
-           ArrayList<Kuvshinka> arrayKuvshinka, MyThread myThread, int timeUnderWater, Handler handler) {
+           ArrayList<Kuvshinka> arrayKuvshinka, MyThread myThread, int timeUnderWater, Hippo hippo, Handler handler) {
         super(hashMapImg, hashMapSize, x, y);
         this.speedFly=speedFly;
         this.handler = handler;
         this.myThread=myThread;
         this.timeUnderWater = timeUnderWater;
+        this.hippo=hippo;
         lengthJump = hashMapSize.get("lengthJump");
         heading = 0;
         this.speedFly = 10;
@@ -43,28 +45,35 @@ public class Player extends PlayObject implements Constants {
     public void setState(int curentState) {
         this.curentState = curentState;
         if(curentState == STATE_IDLE){
+            myThread.setState(STATE_RUNING);
             curentImg = hashMapImg.get("idleFrogImg");
             rect.set(rect.left, rect.top, rect.left + hashMapSize.get("idleFrogWidth"), rect.top + hashMapSize.get("idleFrogHeight"));
-        }else if (curentState == STATE_MOVE){
+        }
+        else if (curentState == STATE_MOVE) {
             curentImg = curentImg = hashMapImg.get("flyFrogImg");
             rect.set(rect.left, rect.top, rect.left + hashMapSize.get("flyFrogWidth"), rect.top + hashMapSize.get("flyFrogHeight"));
-//        }else if (curentState == STATE_BULK){
-//
-//
-//        }else if (curentState == STATE_LOSE){
-//            //game over
-//        }else if (curentState == STATE_WIN){
-//            //win
-        }else if (curentState == STATE_BULK) {
+        }
+        else if (curentState == STATE_ONHIPPO) {
+            curentImg = hashMapImg.get("idleFrogImg");
+
+        }
+        else if (curentState == STATE_BULK) {
             now = System.currentTimeMillis();
+            myThread.setState(STATE_BULK);
+        }
+        else if (curentState == STATE_LOSE) {
+
+        }else if (curentState == STATE_WIN){
+            //win
         }
     }
 
     public int getHeading() {
         return heading;
     }
+
     public void setTouchDown(float x, float y){
-        if (rect.contains((int)x, (int)y) && curentState == STATE_IDLE) {
+        if (rect.contains((int)x, (int)y) && (curentState == STATE_IDLE || curentState == STATE_ONHIPPO)) {
             readXY = true;
             x1 = rect.centerX();
             y1 = rect.centerY();
@@ -91,25 +100,31 @@ public class Player extends PlayObject implements Constants {
         }
     }
     public void updatePhysics() {
+
         msg = handler.obtainMessage();
         Bundle b = new Bundle();
-        b.putBoolean("readXY", readXY);
+        b.putInt("countLive", curentState);
         msg.setData(b);
         msg.what=1;
-
         handler.sendMessage(msg);
-        Log.i("fly", "curentState= "+curentState);
+
         if (curentState == STATE_MOVE) {
             rect.offset(dx, -dy);
-            Log.i("fly", "xFinishJump = "+ dx + "; yFinishJump = "+ dy);
             if (Math.sqrt((rect.centerX()-x1)*(rect.centerX()-x1)+(rect.centerY()-y1)*(rect.centerY()-y1))>lengthJump) {
                 checkLocation();
             }
-        }else if (curentState == STATE_BULK) {
+        }
+        else if (curentState == STATE_ONHIPPO) {
+            rect.offset(hippo.getRect().centerX() - rect.centerX(), hippo.getRect().centerY() - rect.centerY());
+        }
+        else if (curentState == STATE_BULK) {
             if(System.currentTimeMillis()>now+ timeUnderWater) {
                 rect.offset(lastKuvshinka.getRect().centerX() - rect.centerX(), lastKuvshinka.getRect().centerY() - rect.centerY());
-                myThread.setState(STATE_RUNING);
+                setState(STATE_IDLE);
             }
+        }
+        else if (curentState == STATE_LOSE) {
+
         }
     }
     private void checkLocation() {
@@ -122,7 +137,12 @@ public class Player extends PlayObject implements Constants {
                 contains = true;
             }
         }
-        if (!contains) myThread.setState(STATE_BULK);
+        if (hippo.getRect().contains(rect.centerX(), rect.centerY())){
+            rect.offset(hippo.getRect().centerX()-rect.centerX(), hippo.getRect().centerY()-rect.centerY());
+            setState(STATE_ONHIPPO);
+            contains = true;
+        }
+        if (!contains) setState(STATE_BULK);
     }
 
 }
