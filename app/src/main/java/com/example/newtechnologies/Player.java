@@ -1,12 +1,8 @@
 package com.example.newtechnologies;
 
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
-
-import java.util.ArrayList;
 import java.util.Map;
 
 public class Player extends PlayObject implements Constants {
@@ -16,32 +12,20 @@ public class Player extends PlayObject implements Constants {
     private int curentState;
     private int speedFly;
     private double radians;
-    Kuvshinka lastKuvshinka;
-    ArrayList<Kuvshinka> arrayKuvshinka;
-    Message msg;
-    Handler handler;
     MyThread myThread;
     Hippo hippo;
-    int timeUnderWater;
-    long now;
 
-    Player(Map<String, Drawable> hashMapImg, Map<String, Integer> hashMapSize, int x, int y, int speedFly,
-           ArrayList<Kuvshinka> arrayKuvshinka, MyThread myThread, int timeUnderWater, Hippo hippo, Handler handler) {
+    Player(Map<String, Drawable> hashMapImg, Map<String, Integer> hashMapSize, int x, int y, int speedFly, MyThread myThread, Hippo hippo) {
         super(hashMapImg, hashMapSize, x, y);
         this.speedFly=speedFly;
-        this.handler = handler;
         this.myThread=myThread;
-        this.timeUnderWater = timeUnderWater;
         this.hippo=hippo;
         lengthJump = hashMapSize.get("lengthJump");
         heading = 0;
         this.speedFly = 10;
         rect.set(x, y, x + hashMapSize.get("idleFrogWidth"), y + hashMapSize.get("idleFrogHeight"));
-        this.arrayKuvshinka = arrayKuvshinka;
-        lastKuvshinka = arrayKuvshinka.get(0);
         setState(STATE_IDLE);
     }
-
     public void setState(int curentState) {
         this.curentState = curentState;
         if(curentState == STATE_IDLE){
@@ -58,7 +42,6 @@ public class Player extends PlayObject implements Constants {
 
         }
         else if (curentState == STATE_BULK) {
-            now = System.currentTimeMillis();
             myThread.setState(STATE_BULK);
         }
         else if (curentState == STATE_LOSE) {
@@ -67,7 +50,6 @@ public class Player extends PlayObject implements Constants {
             //win
         }
     }
-
     public int getHeading() {
         return heading;
     }
@@ -91,8 +73,6 @@ public class Player extends PlayObject implements Constants {
     }
     public void setTouchUp(float x, float y){
         if (readXY) {
-//            msg = handler.obtainMessage(2, (int) x, (int) y);
-//            handler.sendMessage(msg);
             dy = (int) (speedFly*Math.cos(radians));
             dx = (int) (speedFly*Math.sin(radians));
             setState(STATE_MOVE);
@@ -100,49 +80,29 @@ public class Player extends PlayObject implements Constants {
         }
     }
     public void updatePhysics() {
-
-        msg = handler.obtainMessage();
-        Bundle b = new Bundle();
-        b.putInt("countLive", curentState);
-        msg.setData(b);
-        msg.what=1;
-        handler.sendMessage(msg);
-
+//        msg = handler.obtainMessage();
+//        Bundle b = new Bundle();
+//        b.putInt("countLive", curentState);
+//        msg.setData(b);
+//        msg.what=1;
+//        handler.sendMessage(msg);
         if (curentState == STATE_MOVE) {
             rect.offset(dx, -dy);
             if (Math.sqrt((rect.centerX()-x1)*(rect.centerX()-x1)+(rect.centerY()-y1)*(rect.centerY()-y1))>lengthJump) {
-                checkLocation();
+                myThread.checkLocation(rect);
             }
         }
         else if (curentState == STATE_ONHIPPO) {
             rect.offset(hippo.getRect().centerX() - rect.centerX(), hippo.getRect().centerY() - rect.centerY());
         }
-        else if (curentState == STATE_BULK) {
-            if(System.currentTimeMillis()>now+ timeUnderWater) {
-                rect.offset(lastKuvshinka.getRect().centerX() - rect.centerX(), lastKuvshinka.getRect().centerY() - rect.centerY());
-                setState(STATE_IDLE);
-            }
-        }
+
         else if (curentState == STATE_LOSE) {
 
         }
     }
-    private void checkLocation() {
-        boolean contains = false;
-        for(Kuvshinka k : arrayKuvshinka) {
-            if (k.getRect().contains(rect.centerX(), rect.centerY())) {
-                lastKuvshinka = k;
-                rect.offset(k.getRect().centerX()-rect.centerX(), k.getRect().centerY()-rect.centerY());
-                setState(STATE_IDLE);
-                contains = true;
-            }
-        }
-        if (hippo.getRect().contains(rect.centerX(), rect.centerY())){
-            rect.offset(hippo.getRect().centerX()-rect.centerX(), hippo.getRect().centerY()-rect.centerY());
-            setState(STATE_ONHIPPO);
-            contains = true;
-        }
-        if (!contains) setState(STATE_BULK);
+    protected void setPositionFrog(Rect r){
+        rect.set(r);
     }
+
 
 }

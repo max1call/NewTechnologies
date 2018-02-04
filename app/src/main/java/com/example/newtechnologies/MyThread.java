@@ -30,10 +30,10 @@ public class MyThread extends Thread implements Constants {
     private SurfaceHolder surfaceHolder;
     private Context context;
     private Bitmap backgroundImg;
-    protected Drawable kuvshinkaImg, idleFrogImg, flyFrogImg, bulkImg, hippoImg, kamishImg, heartImg, game_overImg;
+    protected Drawable kuvshinkaImg, idleFrogImg, flyFrogImg, bulkImg, hippoImg, kamishImg, heartImg, game_overImg, targetImg;
     private int mCanvasWidth, mCanvasHeight, bgWidth, bgHeight, heartWidth, heartHeight;
     private int idleFrogWidth, idleFrogHeight, flyFrogWidth, flyFrogHeight, bulkWidth,
-            bulkHeight, kuvshinkaWidth, kuvshinkaHeight, hippoWidth, hippoHeight, kamishWidth, kamishHeight;
+            bulkHeight, kuvshinkaWidth, kuvshinkaHeight, hippoWidth, hippoHeight, kamishWidth, kamishHeight, targetWidth, targetHeight;
     private float coefficientScale;
     private int lengthJump;
     protected int curentState;
@@ -41,7 +41,7 @@ public class MyThread extends Thread implements Constants {
     private ArrayList<Kuvshinka> arrayKuvshinka;
     private ArrayList<Heart> arrayHeart;
     Player player;
-    Kuvshinka kuvshinka;
+    Kuvshinka kuvshinka, lastKuvshinka;
     Hippo hippo;
     Splash splash;
     Heart heart;
@@ -58,8 +58,12 @@ public class MyThread extends Thread implements Constants {
     MainActivity m;
     private int countLive = 3;
     private Kamish kamish;
+    private Target target;
     private GameOver game_over;
     private boolean canDrawGameOver = false;
+    long now;
+    int timeUnderWater;
+    Rect rectFrog;
 
     public MyThread(MyView myView, SurfaceHolder surfaceHolder, Context context, Handler handler) {
         Log.i(TAG, "Begin Constructor MyThread");
@@ -91,6 +95,7 @@ public class MyThread extends Thread implements Constants {
         bulkImg = context.getResources().getDrawable(R.drawable.bulk);
         hippoImg = context.getResources().getDrawable(R.drawable.begemot);
         heartImg = context.getResources().getDrawable(R.drawable.heart);
+        targetImg = context.getResources().getDrawable(R.drawable.target_frog);
     }
     private void defineSizeImg() {
         bgWidth=backgroundImg.getWidth();
@@ -109,7 +114,8 @@ public class MyThread extends Thread implements Constants {
         hippoHeight = hippoImg.getIntrinsicHeight();
         heartWidth = heartImg.getIntrinsicWidth();
         heartHeight = heartImg.getIntrinsicHeight();
-//        Log.i(TAG, "defineSizeImg bgWidth= "+bgWidth+"; bgHeight= "+bgHeight);
+        targetWidth = targetImg.getIntrinsicWidth();
+        targetHeight = targetImg.getIntrinsicHeight();
     }
     private void calcullateScale() {
         rectDisplay = new Rect();
@@ -143,6 +149,8 @@ public class MyThread extends Thread implements Constants {
 
             heartWidth = (int) (heartWidth/coefficientScale);
             heartHeight = (int) (heartHeight/coefficientScale);
+            targetWidth = (int) (targetWidth/coefficientScale);
+            targetHeight = (int) (targetHeight/coefficientScale);
             canResize = false;
         }
     }
@@ -156,6 +164,7 @@ public class MyThread extends Thread implements Constants {
         hashMapImg.put("bulkImg", bulkImg);
         hashMapImg.put("hippoImg", hippoImg);
         hashMapImg.put("heartImg", heartImg);
+        hashMapImg.put("targetImg", targetImg);
 
         hashMapSize = new HashMap<String, Integer>();
         hashMapSize.put("kamishWidth",kamishWidth);
@@ -175,6 +184,8 @@ public class MyThread extends Thread implements Constants {
         hashMapSize.put("mCanvasHeight",mCanvasHeight);
         hashMapSize.put("heartWidth",heartWidth);
         hashMapSize.put("heartHeight",heartHeight);
+        hashMapSize.put("targetWidth",targetWidth);
+        hashMapSize.put("targetHeight",targetHeight);
     }
     private void makeStage1() {
         Log.i(TAG, "Begin makeStage1");
@@ -185,7 +196,7 @@ public class MyThread extends Thread implements Constants {
         int speedFly=10;
         int xHippo = 300;
         int yHippo = 200;
-        int underWater=0;
+        int underWater=1000;
         int kHeading;
         double radians;
 
@@ -195,7 +206,7 @@ public class MyThread extends Thread implements Constants {
         xPlayer = xKuvshinka+(kuvshinkaWidth-idleFrogWidth)/2;
         yPlayer = yKuvshinka+(kuvshinkaHeight-idleFrogHeight)/2;
 
-        kHeading = 45;
+        kHeading = 35;
         radians = 2 * Math.PI * kHeading / 360;//double radians;
         xKuvshinka += (int) (lengthJump*Math.sin(radians));
         yKuvshinka -= (int) (lengthJump*Math.cos(radians));
@@ -214,11 +225,11 @@ public class MyThread extends Thread implements Constants {
         xHippo = xKuvshinka;
         yHippo = yKuvshinka;
 
-        kHeading = 45;
+        kHeading = 35;
         radians = 2 * Math.PI * kHeading / 360;
         xKuvshinka += (int) (lengthJump*Math.sin(radians));
         yKuvshinka -= (int) (lengthJump*Math.cos(radians));
-        newKuvshinka(xKuvshinka, yKuvshinka);
+        target = new Target(hashMapImg, hashMapSize , xKuvshinka, yKuvshinka);
 
         int k = lengthJump/20;
         newHeart(k, k);
@@ -226,8 +237,8 @@ public class MyThread extends Thread implements Constants {
         newHeart(3*k+2*heartWidth, k);
 
         hippo = new Hippo(hashMapImg, hashMapSize , xHippo, yHippo);
-        player = new Player(hashMapImg, hashMapSize , xPlayer, yPlayer, speedFly, arrayKuvshinka, this, underWater, hippo, handler);
-
+        player = new Player(hashMapImg, hashMapSize , xPlayer, yPlayer, speedFly, this, hippo);
+        lastKuvshinka = arrayKuvshinka.get(0);
         splash = new Splash(hashMapImg, hashMapSize , 0, 0, player);
         kamish = new Kamish(hashMapImg, hashMapSize , 0, mCanvasHeight-kamishHeight);
         inputOutput = new InputOutput(myView, player, this);
@@ -245,7 +256,7 @@ public class MyThread extends Thread implements Constants {
         arrayHeart.add(heart);
     }
 
-    public void setState(int state) {
+    public void setState(int state) {/////////////****************************////////////////////////////
         CharSequence str;
         curentState = state;
 //        Log.i(TAG, "Begin setState");
@@ -261,6 +272,7 @@ public class MyThread extends Thread implements Constants {
             running = false;
 
         } else if (curentState == STATE_BULK) {
+            now = System.currentTimeMillis();
             splash.setLocatoin();
             countLive--;
             if (countLive>0) {
@@ -277,8 +289,33 @@ public class MyThread extends Thread implements Constants {
             gameOver(System.currentTimeMillis());
 
         } else if (curentState == STATE_WIN) {
+            player.setState(STATE_WIN);
             //win
         }
+    }
+    protected void checkLocation(Rect rectFrog) {
+        boolean contains = false;
+        this.rectFrog = rectFrog;
+        for(Kuvshinka k : arrayKuvshinka) {
+            if (k.getRect().contains(rectFrog.centerX(), rectFrog.centerY())) {
+                lastKuvshinka = k;
+                rectFrog.offset(k.getRect().centerX()-rectFrog.centerX(), k.getRect().centerY()-rectFrog.centerY());
+                player.setPositionFrog(rectFrog);
+                player.setState(STATE_IDLE);
+                contains = true;
+            }
+        }
+        if (hippo.getRect().contains(rectFrog.centerX(), rectFrog.centerY())){
+            rectFrog.offset(hippo.getRect().centerX()-rectFrog.centerX(), hippo.getRect().centerY()-rectFrog.centerY());
+            player.setPositionFrog(rectFrog);
+            player.setState(STATE_ONHIPPO);
+            contains = true;
+        }
+        else if (target.getRect().contains(rectFrog.centerX(), rectFrog.centerY())){
+            setState(STATE_WIN);
+            contains = true;
+        }
+        if (!contains) player.setState(STATE_BULK);
     }
 
     private void gameOver(long l) {
@@ -324,6 +361,15 @@ public class MyThread extends Thread implements Constants {
         player.updatePhysics();
         hippo.updatePhysics();
         game_over.updatePhysics();
+
+        if (curentState == STATE_BULK) {
+            Rect rect = new Rect(player.getRect());
+            if(System.currentTimeMillis()>now + timeUnderWater) {
+                rect.offset(lastKuvshinka.getRect().centerX() - rect.centerX(), lastKuvshinka.getRect().centerY() - rect.centerY());
+                player.setPositionFrog(rect);
+                player.setState(STATE_IDLE);
+            }
+        }
     }
 
     private void doDraw(Canvas canvas) {
@@ -338,6 +384,9 @@ public class MyThread extends Thread implements Constants {
             k.getCurentImg().setBounds(k.getRect());
             k.getCurentImg().draw(canvas);
         }
+
+        target.getCurentImg().setBounds(target.getRect());
+        target.getCurentImg().draw(canvas);
 
         for(Heart h : arrayHeart){
             h.getCurentImg().setBounds(h.getRect());
