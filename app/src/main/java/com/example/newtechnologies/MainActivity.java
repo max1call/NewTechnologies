@@ -19,7 +19,6 @@ public class MainActivity extends Activity {
     MyView myView;
     MyThread myThread;
     public TextView tvt1;
-    public TextView tvt2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +28,6 @@ public class MainActivity extends Activity {
         myView= (MyView) findViewById(R.id.myview);
         myThread=myView.getThread();
         tvt1 = (TextView) findViewById(R.id.tv1);
-        tvt2 = (TextView) findViewById(R.id.tv2);
-        myView.setTextView(tvt1, tvt2);
+        myView.setTextView(tvt1);
     }
 }

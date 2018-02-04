@@ -30,7 +30,7 @@ public class MyThread extends Thread implements Constants {
     private SurfaceHolder surfaceHolder;
     private Context context;
     private Bitmap backgroundImg;
-    protected Drawable kuvshinkaImg, idleFrogImg, flyFrogImg, bulkImg, hippoImg, kamishImg, heartImg;
+    protected Drawable kuvshinkaImg, idleFrogImg, flyFrogImg, bulkImg, hippoImg, kamishImg, heartImg, game_overImg;
     private int mCanvasWidth, mCanvasHeight, bgWidth, bgHeight, heartWidth, heartHeight;
     private int idleFrogWidth, idleFrogHeight, flyFrogWidth, flyFrogHeight, bulkWidth,
             bulkHeight, kuvshinkaWidth, kuvshinkaHeight, hippoWidth, hippoHeight, kamishWidth, kamishHeight;
@@ -55,10 +55,11 @@ public class MyThread extends Thread implements Constants {
     Paint paint;
     Message msg;
     public TextView tvt1;
-    public TextView tvt2;
     MainActivity m;
     private int countLive = 3;
     private Kamish kamish;
+    private GameOver game_over;
+    private boolean canDrawGameOver = false;
 
     public MyThread(MyView myView, SurfaceHolder surfaceHolder, Context context, Handler handler) {
         Log.i(TAG, "Begin Constructor MyThread");
@@ -83,6 +84,7 @@ public class MyThread extends Thread implements Constants {
     private void initImg() {
         backgroundImg = BitmapFactory.decodeResource(context.getResources(), R.drawable.background3);
         kamishImg = context.getResources().getDrawable(R.drawable.kamish);
+        game_overImg = context.getResources().getDrawable(R.drawable.game_over);
         kuvshinkaImg = context.getResources().getDrawable(R.drawable.kuvshinka);
         idleFrogImg = context.getResources().getDrawable(R.drawable.idle_frog);
         flyFrogImg = context.getResources().getDrawable(R.drawable.fly_frog);
@@ -146,6 +148,7 @@ public class MyThread extends Thread implements Constants {
     }
     private void putToHash() {
         hashMapImg = new HashMap<String, Drawable>();
+        hashMapImg.put("game_overImg", game_overImg);
         hashMapImg.put("kamishImg", kamishImg);
         hashMapImg.put("kuvshinkaImg", kuvshinkaImg);
         hashMapImg.put("idleFrogImg", idleFrogImg);
@@ -182,7 +185,7 @@ public class MyThread extends Thread implements Constants {
         int speedFly=10;
         int xHippo = 300;
         int yHippo = 200;
-        int underWater=3000;
+        int underWater=0;
         int kHeading;
         double radians;
 
@@ -228,6 +231,7 @@ public class MyThread extends Thread implements Constants {
         splash = new Splash(hashMapImg, hashMapSize , 0, 0, player);
         kamish = new Kamish(hashMapImg, hashMapSize , 0, mCanvasHeight-kamishHeight);
         inputOutput = new InputOutput(myView, player, this);
+        game_over = new GameOver(hashMapImg, hashMapSize , mCanvasWidth/2, mCanvasHeight/2);
 //        Log.i(TAG, "Finish makeStage1");
     }
 
@@ -269,13 +273,18 @@ public class MyThread extends Thread implements Constants {
 
         } else if (curentState == STATE_LOSE) {
             player.setState(STATE_LOSE);
-            hippo.setState(STATE_IDLE);
-            //game over
+//            hippo.setState(STATE_IDLE);
+            gameOver(System.currentTimeMillis());
 
         } else if (curentState == STATE_WIN) {
             //win
         }
-//        Log.i(TAG, "Finish setState");
+    }
+
+    private void gameOver(long l) {
+
+        game_over.setCanUpdate(true);
+        canDrawGameOver = true;
     }
 
     public void setSurfaceSize(int width, int height) {
@@ -314,9 +323,11 @@ public class MyThread extends Thread implements Constants {
     private void updatePhysics() {
         player.updatePhysics();
         hippo.updatePhysics();
+        game_over.updatePhysics();
     }
 
     private void doDraw(Canvas canvas) {
+
         canvas.drawBitmap(backgroundImg, 0, 0, null);
 
         if (curentState == STATE_BULK || curentState == STATE_LOSE) {
@@ -348,6 +359,11 @@ public class MyThread extends Thread implements Constants {
         }
         kamish.getCurentImg().setBounds(kamish.getRect());
         kamish.getCurentImg().draw(canvas);
+
+        if (canDrawGameOver){
+            game_over.getCurentImg().setBounds(game_over.getRect());
+            game_over.getCurentImg().draw(canvas);
+        }
     }
 
     public void setRunning(boolean b) {

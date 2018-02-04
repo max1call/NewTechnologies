@@ -10,28 +10,18 @@
         android:id="@+id/myview"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
         <TextView
             android:id="@+id/tv1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginLeft="32dp"
-            android:layout_marginTop="32dp"
+            android:layout_centerInParent="true"
             android:text="tv1"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tv2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginLeft="32dp"
-            android:layout_marginTop="60dp"
-            android:text="tv2"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
+    </RelativeLayout>
 
 </android.support.constraint.ConstraintLayout>

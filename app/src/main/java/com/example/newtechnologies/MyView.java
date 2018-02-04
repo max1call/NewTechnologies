@@ -19,17 +19,14 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
 
     MyThread thread ;
     public TextView tvt1;
-    public TextView tvt2;
     CharSequence str;
 
     MyView(Context context, AttributeSet attrs) {
         super(context, attrs);
-//        Log.w("Target", "MyView: Constructor begin");
         SurfaceHolder holder = getHolder();
         holder.addCallback(this);
 
         tvt1 = (TextView) findViewById(R.id.tv1);
-        tvt2 = (TextView) findViewById(R.id.tv2);
 
         Log.w("Target", "MyView: thread = new MyThread(holder, context...");
         thread = new MyThread(this, holder, context, new Handler() {
@@ -39,28 +36,13 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
                     str = "countLive= "+m.getData().getInt("countLive");
                     tvt1.setText(str);
                 }
-                if(m.what==2){
-                    str = "down x= "+m.arg1+"; y= "+m.arg2;
-                    tvt2.setText(str);
-                }
             }
         });
         setFocusable(true);
     }
-
     public MyThread getThread() {
         return thread;
     }
-
-//    @Override
-//    public boolean onKeyDown(int keyCode, KeyEvent msg) {
-//        return thread.doKeyDown(keyCode, msg);
-//    }
-//
-//    @Override
-//    public boolean onKeyUp(int keyCode, KeyEvent msg) {
-//        return thread.doKeyUp(keyCode, msg);
-//    }
 
     @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
@@ -92,8 +74,7 @@ public class MyView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
-    public void setTextView(TextView tvt1, TextView tvt2) {
+    public void setTextView(TextView tvt1) {
         this.tvt1=tvt1;
-        this.tvt2=tvt2;
     }
 }
