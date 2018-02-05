@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
 
@@ -24,6 +25,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
         myView= (MyView) findViewById(R.id.myview);
         myThread=myView.getThread();
