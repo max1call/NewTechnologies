@@ -24,7 +24,7 @@ public class MenuActivity extends Activity {
 //        btn_new = (ToggleButton) findViewById(R.id.btn_new);
     }
     public void newGame(View v){
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(MenuActivity.this, MainActivity.class);
         startActivity(intent);
     }
 

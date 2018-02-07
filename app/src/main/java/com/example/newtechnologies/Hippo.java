@@ -1,6 +1,5 @@
 package com.example.newtechnologies;
 
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 import java.util.Map;
@@ -25,7 +24,7 @@ public class Hippo extends PlayObject implements Constants {
     public void setState(int curentState) {
         if (curentState == STATE_MOVE) {
             speed = hashMapSize.get("lengthJump")/100;
-        } else if (curentState == STATE_IDLE) {
+        } else if (curentState == STATE_PAUSE) {
             speed = 0;
         }
     }
@@ -40,7 +39,7 @@ public class Hippo extends PlayObject implements Constants {
 //
 //
 //    public void setState(int curentState) {
-//        if(curentState == STATE_IDLE){
+//        if(curentState == STATE_ONKUVSHINKA){
 //
 //        }else if (curentState == STATE_MOVE) {
 //

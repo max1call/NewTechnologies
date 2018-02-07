@@ -9,11 +9,9 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 import android.view.Display;
-import android.view.KeyEvent;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -30,7 +28,7 @@ public class MyThread extends Thread implements Constants {
     private SurfaceHolder surfaceHolder;
     private Context context;
     private Bitmap backgroundImg;
-    protected Drawable kuvshinkaImg, idleFrogImg, flyFrogImg, bulkImg, hippoImg, kamishImg, heartImg, game_overImg, targetImg;
+    protected Drawable kuvshinkaImg, idleFrogImg, flyFrogImg, bulkImg, hippoImg, kamishImg, heartImg, game_overImg, winImg, targetImg;
     private int mCanvasWidth, mCanvasHeight, bgWidth, bgHeight, heartWidth, heartHeight;
     private int idleFrogWidth, idleFrogHeight, flyFrogWidth, flyFrogHeight, bulkWidth,
             bulkHeight, kuvshinkaWidth, kuvshinkaHeight, hippoWidth, hippoHeight, kamishWidth, kamishHeight, targetWidth, targetHeight;
@@ -60,6 +58,7 @@ public class MyThread extends Thread implements Constants {
     private Kamish kamish;
     private Target target;
     private GameOver game_over;
+    private Win win;
     private boolean canDrawGameOver = false;
     long now;
     int timeUnderWater;
@@ -89,6 +88,7 @@ public class MyThread extends Thread implements Constants {
         backgroundImg = BitmapFactory.decodeResource(context.getResources(), R.drawable.background3);
         kamishImg = context.getResources().getDrawable(R.drawable.kamish);
         game_overImg = context.getResources().getDrawable(R.drawable.game_over);
+        winImg = context.getResources().getDrawable(R.drawable.win);
         kuvshinkaImg = context.getResources().getDrawable(R.drawable.kuvshinka);
         idleFrogImg = context.getResources().getDrawable(R.drawable.idle_frog);
         flyFrogImg = context.getResources().getDrawable(R.drawable.fly_frog);
@@ -157,6 +157,7 @@ public class MyThread extends Thread implements Constants {
     private void putToHash() {
         hashMapImg = new HashMap<String, Drawable>();
         hashMapImg.put("game_overImg", game_overImg);
+        hashMapImg.put("winImg", winImg);
         hashMapImg.put("kamishImg", kamishImg);
         hashMapImg.put("kuvshinkaImg", kuvshinkaImg);
         hashMapImg.put("idleFrogImg", idleFrogImg);
@@ -193,10 +194,10 @@ public class MyThread extends Thread implements Constants {
         arrayHeart = new ArrayList<Heart>();
         int xPlayer=100;
         int yPlayer=100;
-        int speedFly=10;
+        int speedFly= (int)lengthJump/5;
         int xHippo = 300;
         int yHippo = 200;
-        int underWater=1000;
+        timeUnderWater=2000;
         int kHeading;
         double radians;
 
@@ -243,6 +244,7 @@ public class MyThread extends Thread implements Constants {
         kamish = new Kamish(hashMapImg, hashMapSize , 0, mCanvasHeight-kamishHeight);
         inputOutput = new InputOutput(myView, player, this);
         game_over = new GameOver(hashMapImg, hashMapSize , mCanvasWidth/2, mCanvasHeight/2);
+        win = new Win(hashMapImg, hashMapSize , mCanvasWidth/2, mCanvasHeight/2);
 //        Log.i(TAG, "Finish makeStage1");
     }
 
@@ -262,7 +264,7 @@ public class MyThread extends Thread implements Constants {
 //        Log.i(TAG, "Begin setState");
 
         if (curentState == STATE_RUNING) {
-//            player.setState(STATE_IDLE);
+//            player.setState(STATE_ONKUVSHINKA);
 //            hippo.setState(STATE_MOVE);
 //            paint.setColor(Color.BLACK);
             running = true;
@@ -277,7 +279,7 @@ public class MyThread extends Thread implements Constants {
             countLive--;
             if (countLive>0) {
                 arrayHeart.remove(countLive);
-//                player.setState(STATE_BULK);
+                player.setState(STATE_BULK);
             } else if (countLive == 0){
                 arrayHeart.remove(countLive);
                 setState(STATE_LOSE);
@@ -285,12 +287,13 @@ public class MyThread extends Thread implements Constants {
 
         } else if (curentState == STATE_LOSE) {
             player.setState(STATE_LOSE);
-//            hippo.setState(STATE_IDLE);
-            gameOver(System.currentTimeMillis());
+            hippo.setState(STATE_PAUSE);
+            gameOver();
 
         } else if (curentState == STATE_WIN) {
             player.setState(STATE_WIN);
-            //win
+            hippo.setState(STATE_PAUSE);
+            win();
         }
     }
     protected void checkLocation(Rect rectFrog) {
@@ -299,15 +302,15 @@ public class MyThread extends Thread implements Constants {
         for(Kuvshinka k : arrayKuvshinka) {
             if (k.getRect().contains(rectFrog.centerX(), rectFrog.centerY())) {
                 lastKuvshinka = k;
-                rectFrog.offset(k.getRect().centerX()-rectFrog.centerX(), k.getRect().centerY()-rectFrog.centerY());
-                player.setPositionFrog(rectFrog);
-                player.setState(STATE_IDLE);
+//                rectFrog.offset(k.getRect().centerX()-rectFrog.centerX(), k.getRect().centerY()-rectFrog.centerY());
+//                player.setPositionFrog(rectFrog);
+                player.setState(STATE_ONKUVSHINKA);
                 contains = true;
             }
         }
         if (hippo.getRect().contains(rectFrog.centerX(), rectFrog.centerY())){
-            rectFrog.offset(hippo.getRect().centerX()-rectFrog.centerX(), hippo.getRect().centerY()-rectFrog.centerY());
-            player.setPositionFrog(rectFrog);
+//            rectFrog.offset(hippo.getRect().centerX()-rectFrog.centerX(), hippo.getRect().centerY()-rectFrog.centerY());
+//            player.setPositionFrog(rectFrog);
             player.setState(STATE_ONHIPPO);
             contains = true;
         }
@@ -315,13 +318,19 @@ public class MyThread extends Thread implements Constants {
             setState(STATE_WIN);
             contains = true;
         }
-        if (!contains) player.setState(STATE_BULK);
+        if (!contains) setState(STATE_BULK);
     }
 
-    private void gameOver(long l) {
-
+    private void gameOver() {
+        now = System.currentTimeMillis();
         game_over.setCanUpdate(true);
-        canDrawGameOver = true;
+//        canDrawGameOver = true;
+    }
+
+    private void win() {
+//        now = System.currentTimeMillis();
+        win.setCanUpdate(true);
+//        canDrawGameOver = true;
     }
 
     public void setSurfaceSize(int width, int height) {
@@ -361,13 +370,14 @@ public class MyThread extends Thread implements Constants {
         player.updatePhysics();
         hippo.updatePhysics();
         game_over.updatePhysics();
+        win.updatePhysics();
 
         if (curentState == STATE_BULK) {
             Rect rect = new Rect(player.getRect());
             if(System.currentTimeMillis()>now + timeUnderWater) {
                 rect.offset(lastKuvshinka.getRect().centerX() - rect.centerX(), lastKuvshinka.getRect().centerY() - rect.centerY());
                 player.setPositionFrog(rect);
-                player.setState(STATE_IDLE);
+                player.setState(STATE_ONKUVSHINKA);
             }
         }
     }
@@ -397,7 +407,7 @@ public class MyThread extends Thread implements Constants {
         hippo.getCurentImg().setBounds(hippo.getRect());
         hippo.getCurentImg().draw(canvas);
 
-        if (curentState != STATE_BULK && curentState != STATE_LOSE) {
+        if (curentState != STATE_BULK && curentState != STATE_LOSE && curentState != STATE_WIN) {
             canvas.save();
             Rect rect = new Rect(player.getRect());
             canvas.rotate((float) player.getHeading(), rect.centerX(), rect.centerY());
@@ -409,7 +419,12 @@ public class MyThread extends Thread implements Constants {
         kamish.getCurentImg().setBounds(kamish.getRect());
         kamish.getCurentImg().draw(canvas);
 
-        if (canDrawGameOver){
+        if (curentState == STATE_WIN){
+            win.getCurentImg().setBounds(win.getRect());
+            win.getCurentImg().draw(canvas);
+        }
+
+        if (curentState == STATE_LOSE && (System.currentTimeMillis()>now + timeUnderWater)){
             game_over.getCurentImg().setBounds(game_over.getRect());
             game_over.getCurentImg().draw(canvas);
         }

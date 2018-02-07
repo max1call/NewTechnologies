@@ -2,7 +2,7 @@ package com.example.newtechnologies;
 
 public interface Constants {
 
-    public static final int STATE_IDLE = 1;
+    public static final int STATE_ONKUVSHINKA = 1;
     public static final int STATE_MOVE = 2;
     public static final int STATE_BULK = 3;
     public static final int STATE_LOSE = 4;

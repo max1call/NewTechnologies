@@ -24,11 +24,11 @@ public class Player extends PlayObject implements Constants {
         heading = 0;
         this.speedFly = 10;
         rect.set(x, y, x + hashMapSize.get("idleFrogWidth"), y + hashMapSize.get("idleFrogHeight"));
-        setState(STATE_IDLE);
+        setState(STATE_ONKUVSHINKA);
     }
-    public void setState(int curentState) {
+    public void setState(int curentState) {/////////////////******************////////////////////////////
         this.curentState = curentState;
-        if(curentState == STATE_IDLE){
+        if(curentState == STATE_ONKUVSHINKA){
             myThread.setState(STATE_RUNING);
             curentImg = hashMapImg.get("idleFrogImg");
             rect.set(rect.left, rect.top, rect.left + hashMapSize.get("idleFrogWidth"), rect.top + hashMapSize.get("idleFrogHeight"));
@@ -42,7 +42,7 @@ public class Player extends PlayObject implements Constants {
 
         }
         else if (curentState == STATE_BULK) {
-            myThread.setState(STATE_BULK);
+//            myThread.setState(STATE_BULK);
         }
         else if (curentState == STATE_LOSE) {
 
@@ -55,7 +55,7 @@ public class Player extends PlayObject implements Constants {
     }
 
     public void setTouchDown(float x, float y){
-        if (rect.contains((int)x, (int)y) && (curentState == STATE_IDLE || curentState == STATE_ONHIPPO)) {
+        if (rect.contains((int)x, (int)y) && (curentState == STATE_ONKUVSHINKA || curentState == STATE_ONHIPPO)) {
             readXY = true;
             x1 = rect.centerX();
             y1 = rect.centerY();
