@@ -1,4 +1,4 @@
-package com.example.newtechnologies;
+package com.example.newtechnologies;//Сохранение текущего сост. возврат на предыдущее активити без создания нового. 3 стажа.
 
 import android.app.Activity;
 import android.content.Context;
